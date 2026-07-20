@@ -20,6 +20,11 @@ revised it through a chain of Section 206 complaints and opinions:
   ER20-928 lineage); the only comparable RTO-wide-style track available for SPP
 - **CAISO-PGE** -- Pacific Gas & Electric's CAISO transmission rate case
   (Docket ER19-13 lineage)
+- **SOUTHERN** -- Southern Company's traditional operating companies (Alabama
+  Power, Georgia Power, Gulf Power, Mississippi Power), Docket ER19-1427
+  lineage. Southern Company is **not** in an RTO/ISO for its transmission
+  function (it runs its own balancing authority footprint), making this the
+  clearest non-RTO example found with a documented before/after base ROE.
 
 Together these span 2002-2026 and capture the core story: FERC's shift from
 settlement-based ROEs in the 11-13% range toward composite DCF/CAPM-derived
@@ -47,6 +52,16 @@ comparable to the "base ROE" figures used elsewhere in this dataset.
 A generic 2020 policy statement on natural gas/oil pipeline ROE methodology is
 included for context but has no numeric ROE (it governs *how* ROE is
 calculated in individual pipeline cases, not a specific rate).
+
+**Other non-RTO utilities** (Duke Energy Carolinas/Progress, PacifiCorp, NV
+Energy, Puget Sound Energy, etc.) were researched but not included: their
+transmission ROEs are set through individual formula-rate settlements that
+rarely produce the kind of public, dated, docket-attributable figure this
+dataset requires, and the only Duke Energy ROE figures found in public
+reporting were state-jurisdictional *retail* ROEs (North Carolina Utilities
+Commission rate cases) -- a different rate base than FERC transmission ROE,
+so they were deliberately excluded rather than conflated. If you have a
+specific non-RTO utility/docket in mind, add a row per the instructions below.
 
 ## Data
 

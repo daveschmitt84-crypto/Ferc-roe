@@ -26,6 +26,7 @@ TRACK_COLORS = {
     "SPP-ALL": "#17becf",
     "PJM": "#9467bd",
     "CAISO-PGE": "#ff7f0e",
+    "SOUTHERN": "#8c564b",
 }
 TRACK_LABELS = {
     "NETO": "New England Transmission Owners",
@@ -34,6 +35,7 @@ TRACK_LABELS = {
     "SPP-ALL": "SPP - all TOs (range)",
     "PJM": "PJM TOs (range)",
     "CAISO-PGE": "CAISO - PG&E",
+    "SOUTHERN": "Southern Company (non-RTO)",
 }
 
 
