@@ -30,6 +30,13 @@ Together these span 2002-2026 and capture the core story: FERC's shift from
 settlement-based ROEs in the 11-13% range toward composite DCF/CAPM-derived
 ROEs around 9.3-10%, driven by a series of D.C. Circuit remands (notably
 *Emera Maine v. FERC*) that forced FERC to repeatedly revise its methodology.
+Across every litigated track, FERC's outcome consistently lands well short of
+what complainants asked for and well below what utilities were defending or
+requesting -- e.g. PG&E asked for 13.3% and got 9.3%; MISO customers asked
+for 9.15% and got 10.32%-9.98% across three re-decisions. NETOs are currently
+asking FERC to reverse course entirely: after Opinion No. 594 cut their ROE
+to 9.57% in March 2026, they filed weeks later to raise it to 11.39%
+(`data_type=pending`, unresolved as of this dataset's compilation).
 
 **Cross-company range snapshots** (`data_type=snapshot_range`) -- PJM and SPP
 overall have **no single RTO-wide base ROE**. Each transmission owner sets its
@@ -70,8 +77,21 @@ a base ROE, with:
 
 - `decision_date` / `effective_date` (FERC has repeatedly applied ROE
   decisions retroactively, sometimes by over a decade -- both dates matter)
-- `base_roe_pct` and, where FERC published one, the `zone_low_pct` /
-  `zone_high_pct` composite zone of reasonableness
+- `base_roe_pct` -- what FERC actually granted, and where FERC published one,
+  the `zone_low_pct` / `zone_high_pct` composite zone of reasonableness
+- `requested_roe_pct` / `requested_by` -- what was actually asked for, and by
+  whom (`customers` for a complainant seeking a cut, `utility` for a utility
+  seeking an increase), that led to (or, for `data_type=pending`, is still
+  awaiting) that row's decision. Charted as a hollow marker connected to the
+  granted value by a dotted line, so you can see how far FERC's outcome
+  landed from each side's opening position. Left blank for baseline rows (no
+  complaint was pending) and for snapshot/policy rows (no single complaint to
+  point to).
+- `data_type` -- `decision` (a FERC-decided base ROE), `pending` (a filed
+  request with no outcome yet -- e.g. NETOs' April 2026 bid to raise their
+  ROE to 11.39%, still unresolved as of this dataset's compilation),
+  `snapshot_range` (a cross-company range, no single ROE), or `policy` (a
+  methodology statement, no numeric ROE)
 - `methodology` and `notes` summarizing the case
 - `source_url` for verification
 

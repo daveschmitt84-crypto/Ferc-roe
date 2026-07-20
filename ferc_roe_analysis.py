@@ -54,15 +54,23 @@ def summarize(df: pd.DataFrame) -> None:
             continue
         print(f"\n{label} ({track}):")
         for _, r in rows.iterrows():
-            roe = f"{r.base_roe_pct:.2f}%" if pd.notna(r.base_roe_pct) else "n/a"
+            if r["data_type"] == "pending":
+                roe = "pending (no outcome yet)"
+            else:
+                roe = f"{r.base_roe_pct:.2f}%" if pd.notna(r.base_roe_pct) else "n/a"
             zone = (
                 f" [range {r.zone_low_pct:.2f}%-{r.zone_high_pct:.2f}%]"
                 if pd.notna(r.zone_low_pct)
                 else ""
             )
+            asked = (
+                f" ({r.requested_by} sought {r.requested_roe_pct:.2f}%)"
+                if pd.notna(r.requested_roe_pct)
+                else ""
+            )
             print(
                 f"  {r.decision_date.date()}  {r.docket_opinion:55s} "
-                f"ROE={roe}{zone}"
+                f"ROE={roe}{zone}{asked}"
             )
         decisions = rows[rows["data_type"] == "decision"].dropna(subset=["base_roe_pct"])
         if len(decisions) >= 2:
@@ -85,13 +93,15 @@ def plot_timeline(df: pd.DataFrame, output_path: str = OUTPUT_PATH) -> None:
             continue
         is_snapshot = (rows["data_type"] == "snapshot_range").all()
 
-        # Snapshot rows have no single base_roe_pct -- plot the range midpoint
-        # as a marker instead of drawing a (misleading) trend line through it.
-        y = rows["base_roe_pct"].fillna(
-            (rows["zone_low_pct"] + rows["zone_high_pct"]) / 2
-        )
+        # Fall back for y-position: granted ROE, else the zone midpoint, else
+        # (for a still-pending filing with no outcome yet) the requested ROE.
+        y = rows["base_roe_pct"]
+        y = y.fillna((rows["zone_low_pct"] + rows["zone_high_pct"]) / 2)
+        y = y.fillna(rows["requested_roe_pct"])
+
+        plotted = rows["data_type"] != "pending"
         ax.plot(
-            rows["decision_date"], y,
+            rows.loc[plotted, "decision_date"], y[plotted],
             marker="s" if is_snapshot else "o",
             linestyle="none" if is_snapshot else "-",
             color=color, label=TRACK_LABELS[track], linewidth=2, markersize=7,
@@ -107,15 +117,37 @@ def plot_timeline(df: pd.DataFrame, output_path: str = OUTPUT_PATH) -> None:
                 fmt="none", ecolor=color, alpha=0.35, capsize=4,
             )
 
+        # Hollow marker for the requested/proposed ROE that led to each
+        # decision, with a dotted connector showing the gap to the outcome.
+        has_ask = rows["requested_roe_pct"].notna()
+        if has_ask.any():
+            ar = rows[has_ask]
+            ay = y[has_ask]
+            ax.scatter(
+                ar["decision_date"], ar["requested_roe_pct"],
+                facecolors="none", edgecolors=color, marker="o", s=70,
+                linewidths=1.4, zorder=5,
+            )
+            for date, granted_y, req_y, pending in zip(
+                ar["decision_date"], ay, ar["requested_roe_pct"], ar["data_type"] == "pending"
+            ):
+                if not pending:
+                    ax.plot([date, date], [granted_y, req_y], linestyle=":",
+                            color=color, alpha=0.6, linewidth=1)
+
         for i, ((_, r), yy) in enumerate(zip(rows.iterrows(), y)):
             y_offset = 9 if i % 2 == 0 else -13
+            label = r["short_label"] + (" (pending)" if r["data_type"] == "pending" else "")
             ax.annotate(
-                r["short_label"],
+                label,
                 (r["decision_date"], yy),
                 textcoords="offset points", xytext=(6, y_offset), fontsize=7.5,
                 color=color, bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
                                         edgecolor="none", alpha=0.75),
             )
+
+    ax.scatter([], [], facecolors="none", edgecolors="black", marker="o", s=70,
+               linewidths=1.4, label="Requested / proposed ROE")
 
     ax.set_title("FERC Base Return on Equity Over Time\n(Electric Transmission Owners)")
     ax.set_xlabel("Decision date")
