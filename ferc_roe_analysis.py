@@ -38,11 +38,48 @@ TRACK_LABELS = {
     "SOUTHERN": "Southern Company (non-RTO)",
 }
 
+# RTO/ISO membership for each track, and the footprint it belongs to. SPP-AEP
+# and SPP-ALL are two views of the same footprint (SPP), so they're collapsed
+# to one "SPP" figure before averaging -- otherwise SPP would count twice
+# toward the RTO average relative to NETO/MISO/PJM/CAISO.
+TRACK_RTO_STATUS = {
+    "NETO": "RTO", "MISO": "RTO", "SPP-AEP": "RTO", "SPP-ALL": "RTO",
+    "PJM": "RTO", "CAISO-PGE": "RTO", "SOUTHERN": "non-RTO",
+}
+TRACK_FOOTPRINT = {
+    "NETO": "ISO-NE", "MISO": "MISO", "SPP-AEP": "SPP", "SPP-ALL": "SPP",
+    "PJM": "PJM", "CAISO-PGE": "CAISO", "SOUTHERN": "Southern (non-RTO)",
+}
+
 
 def load_data(path: str = DATA_PATH) -> pd.DataFrame:
     df = pd.read_csv(path, parse_dates=["decision_date", "effective_date"])
     df["decision_year"] = df["decision_date"].dt.year
     return df
+
+
+def current_roe_by_footprint(df: pd.DataFrame) -> pd.DataFrame:
+    """Each track's most recent settled ROE (decision or snapshot_range;
+    excludes still-pending filings, which have no outcome), collapsed to one
+    value per RTO/ISO footprint."""
+    settled = df[df["data_type"].isin(["decision", "snapshot_range"])].copy()
+    settled["current_value"] = settled["base_roe_pct"].fillna(
+        (settled["zone_low_pct"] + settled["zone_high_pct"]) / 2
+    )
+    latest = (
+        settled[settled["case_track"].isin(TRACK_RTO_STATUS)]
+        .sort_values("decision_date")
+        .groupby("case_track")
+        .tail(1)
+    )
+    latest["footprint"] = latest["case_track"].map(TRACK_FOOTPRINT)
+    latest["rto_status"] = latest["case_track"].map(TRACK_RTO_STATUS)
+    footprints = latest.groupby(["footprint", "rto_status"])["current_value"].mean().reset_index()
+    return footprints
+
+
+def rto_vs_non_rto_averages(footprints: pd.DataFrame) -> pd.DataFrame:
+    return footprints.groupby("rto_status")["current_value"].agg(["mean", "count"])
 
 
 def summarize(df: pd.DataFrame) -> None:
@@ -82,6 +119,22 @@ def summarize(df: pd.DataFrame) -> None:
             )
         elif rows.iloc[0]["data_type"] == "snapshot_range":
             print("  -> No single RTO-wide base ROE; figures are set company-by-company.")
+
+    footprints = current_roe_by_footprint(df)
+    averages = rto_vs_non_rto_averages(footprints)
+    print("\nCurrent Base ROE: RTO vs. non-RTO\n" + "=" * 40)
+    print("(most recent settled base ROE per footprint; excludes the pending NETO filing)")
+    for status in ("RTO", "non-RTO"):
+        print(f"\n{status}:")
+        for _, r in footprints[footprints["rto_status"] == status].iterrows():
+            print(f"  {r.footprint:20s} {r.current_value:.2f}%")
+        row = averages.loc[status]
+        print(f"  -> Average across {int(row['count'])} footprint(s): {row['mean']:.2f}%")
+    if averages.loc["non-RTO", "count"] == 1:
+        print(
+            "\nNote: the non-RTO average rests on a single footprint (Southern "
+            "Company) -- treat it as one data point, not a statistically robust average."
+        )
 
 
 def plot_timeline(df: pd.DataFrame, output_path: str = OUTPUT_PATH) -> None:
@@ -148,6 +201,20 @@ def plot_timeline(df: pd.DataFrame, output_path: str = OUTPUT_PATH) -> None:
 
     ax.scatter([], [], facecolors="none", edgecolors="black", marker="o", s=70,
                linewidths=1.4, label="Requested / proposed ROE")
+
+    footprints = current_roe_by_footprint(df)
+    averages = rto_vs_non_rto_averages(footprints)
+    avg_style = {
+        "RTO": dict(color="black", linestyle="--"),
+        "non-RTO": dict(color="#8c564b", linestyle="--"),
+    }
+    for status, style in avg_style.items():
+        row = averages.loc[status]
+        n_label = f"n={int(row['count'])} footprint" + ("s" if row["count"] != 1 else "")
+        ax.axhline(
+            row["mean"], linewidth=1.5, alpha=0.7, **style,
+            label=f"{status} current avg: {row['mean']:.2f}% ({n_label})",
+        )
 
     ax.set_title("FERC Base Return on Equity Over Time\n(Electric Transmission Owners)")
     ax.set_xlabel("Decision date")

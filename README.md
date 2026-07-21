@@ -70,6 +70,21 @@ Commission rate cases) -- a different rate base than FERC transmission ROE,
 so they were deliberately excluded rather than conflated. If you have a
 specific non-RTO utility/docket in mind, add a row per the instructions below.
 
+## RTO vs. non-RTO average
+
+The script computes each footprint's *current* (most recently settled) base
+ROE, then averages those across the RTO tracks (ISO-NE, MISO, SPP, PJM,
+CAISO) and separately for the non-RTO track (Southern Company), plotted as
+two dashed reference lines. SPP-AEP and SPP-ALL are collapsed into one "SPP"
+figure first so SPP doesn't count twice against the single-footprint NETO,
+MISO, PJM, and CAISO entries. As of this dataset: RTO footprints average
+**9.90%**, non-RTO (Southern Company alone) is **10.60%**.
+
+Treat the non-RTO side as a single data point, not a statistical average --
+Southern Company is the only non-RTO utility with a documented, dated,
+docket-attributable base ROE in this dataset (see below). A real "non-RTO
+average" would need several more non-RTO utilities.
+
 ## Data
 
 `data/ferc_roe_data.csv` -- each row is one FERC decision setting or revising
