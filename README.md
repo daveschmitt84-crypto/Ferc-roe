@@ -113,6 +113,10 @@ a base ROE, with:
   customer/complainant challenged an existing rate (`requested_by=customer`,
   almost always an ask for *less*). Blank for baseline rows, snapshot
   ranges, and the policy statement, which have no single filer to attribute.
+- `disallowed_items` -- what FERC rejected in that case *beyond* the
+  base-ROE number itself (e.g. a denied rate adder), where documented.
+  Currently populated only for PG&E's Section 205 case (denied 50 bp
+  RTO-participation adder); blank elsewhere rather than guessed.
 - `methodology` and `notes` summarizing the case
 - `source_url` for verification
 

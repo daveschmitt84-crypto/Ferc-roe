@@ -15,7 +15,9 @@ doors, and they pull in opposite directions:
 `section` column (205/206) derived from `requested_by`: a utility's own ask
 is a Section 205 filing, a customer's ask is a Section 206 complaint. This
 script isolates the Section 205 rows -- utility asked, FERC decided (or
-hasn't yet) -- and reports the gap between ask and outcome.
+hasn't yet) -- and reports the gap between ask and outcome, plus anything
+else FERC disallowed in that case beyond the ROE number itself
+(`disallowed_items`, e.g. a denied rate adder).
 
 See README.md for full sourcing/scope notes; this script adds no new data,
 it just re-slices ferc_roe_data.csv along the 205/206 line.
@@ -64,6 +66,8 @@ def summarize(cases: pd.DataFrame) -> None:
             )
         else:
             print("  FERC granted:       pending -- no decision yet")
+        if pd.notna(r["disallowed_items"]):
+            print(f"  Also disallowed:    {r['disallowed_items']}")
 
     decided = cases.dropna(subset=["granted_roe_pct"])
     if not decided.empty:
@@ -102,6 +106,10 @@ def plot_ask_vs_received(cases: pd.DataFrame, output_path: str = OUTPUT_PATH) ->
         if pd.isna(granted):
             ax.annotate("pending", (ask, i), textcoords="offset points",
                         xytext=(8, 0), fontsize=8, color="#d62728", va="center")
+        elif pd.notna(r["disallowed_items"]):
+            ax.annotate(f"also disallowed: {r['disallowed_items']}", (granted, i),
+                        textcoords="offset points", xytext=(0, -14), fontsize=7,
+                        color="#555555", ha="center", va="top", style="italic")
 
     ax.set_yticks(list(y_pos))
     ax.set_yticklabels(labels, fontsize=8.5)
