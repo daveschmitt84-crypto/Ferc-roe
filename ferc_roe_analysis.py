@@ -11,6 +11,8 @@ than a trend line. See data/ferc_roe_data.csv for sourcing and README.md for sco
 and limitations.
 """
 
+import os
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -222,6 +224,7 @@ def plot_timeline(df: pd.DataFrame, output_path: str = OUTPUT_PATH) -> None:
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0), fontsize=9, borderaxespad=0)
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     fig.savefig(output_path, dpi=150)
     print(f"\nSaved chart to {output_path}")
 

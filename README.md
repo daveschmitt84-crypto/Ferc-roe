@@ -107,6 +107,12 @@ a base ROE, with:
   ROE to 11.39%, still unresolved as of this dataset's compilation),
   `snapshot_range` (a cross-company range, no single ROE), or `policy` (a
   methodology statement, no numeric ROE)
+- `section` -- which Federal Power Act provision put the row's number in
+  front of FERC: `205` when the utility itself filed to change its own rate
+  (`requested_by=utility`, almost always an ask for *more*), `206` when a
+  customer/complainant challenged an existing rate (`requested_by=customer`,
+  almost always an ask for *less*). Blank for baseline rows, snapshot
+  ranges, and the policy statement, which have no single filer to attribute.
 - `methodology` and `notes` summarizing the case
 - `source_url` for verification
 
@@ -143,3 +149,22 @@ python3 ferc_roe_analysis.py
 
 This prints a summary of each case track's decisions and writes a timeline
 chart to `output/ferc_roe_timeline.png`.
+
+### Section 205: what the utility asked for vs. what it got
+
+```bash
+python3 ferc_205_analysis.py
+```
+
+Slices the same dataset down to Section 205 rows only (`section=205`) --
+cases where the utility itself filed to raise its own rate, as opposed to a
+customer complaint (Section 206) seeking a cut. For each, it reports the
+utility's ask, FERC's decision (or "pending" if undecided), the gap in
+percentage points, and what share of the ask FERC granted, then plots them
+as an ask-vs-granted chart to `output/ferc_205_ask_vs_received.png`. As of
+this dataset, there are two Section 205 rows: PG&E asked for 13.30% and got
+9.30% (Docket ER19-13), and NETOs' April 2026 filing asking for 11.39% is
+still pending. This is a thin sample -- extend it the same way as the rest
+of the dataset (add a row with `section=205` and both
+`requested_roe_pct`/`base_roe_pct` filled in) as more utility-initiated
+cases are documented.
